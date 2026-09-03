@@ -23,9 +23,8 @@ function Admin() {
       setError("");
 
       const response = await fetch(
-        "http://localhost:5000/api/admin/jobs"
+      `${import.meta.env.VITE_API_URL}/api/admin/jobs`
       );
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -70,7 +69,7 @@ function Admin() {
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/admin/jobs/${jobId}/status`,
+         `${import.meta.env.VITE_API_URL}/api/admin/jobs/${jobId}/status`,
         {
           method: "PATCH",
 

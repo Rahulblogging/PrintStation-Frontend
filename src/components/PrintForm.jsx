@@ -149,12 +149,12 @@ function PrintForm() {
       // --------------------------------------
 
       const response = await fetch(
-        "http://localhost:5000/api/print",
-        {
-          method: "POST",
-          body: formData
-        }
-      );
+        `${import.meta.env.VITE_API_URL}/api/print`,
+          {
+            method: "POST",
+            body: formData
+          }
+        );
 
 
       // --------------------------------------
