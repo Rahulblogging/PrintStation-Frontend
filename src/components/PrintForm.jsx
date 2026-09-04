@@ -4,141 +4,196 @@ function PrintForm() {
   const [file, setFile] = useState(null);
   const [printType, setPrintType] = useState("black-white");
   const [copies, setCopies] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [agentOnline, setAgentOnline] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [agentOnline, setAgentOnline] = useState(false);
+
+  // Reference to file input
   const fileInputRef = useRef(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    let failedChecks = 0;
+  // ========================================
+  // CHECK PRINT AGENT STATUS
+  // ========================================
 
-    const checkAgentStatus = async () => {
-      try {
-        const response = await fetch(
-          `${API_URL}/api/agent/status`
-        );
-
-        if (!response.ok) {
-          throw new Error("Status check failed");
-        }
-
-        const data = await response.json();
-
-        if (data.online === true) {
-          failedChecks = 0;
-          setAgentOnline(true);
-        } else {
-          failedChecks++;
-
-          if (failedChecks >= 3) {
-            setAgentOnline(false);
-          }
-        }
-      } catch (error) {
-        failedChecks++;
-
-        if (failedChecks >= 3) {
-          setAgentOnline(false);
-        }
-      }
-    };
-
-    // Check immediately
-    checkAgentStatus();
-
-    // Check every 5 seconds
-    const interval = setInterval(checkAgentStatus, 5000);
-
-    return () => clearInterval(interval);
-  }, [API_URL]);
-
-  const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-
-    setMessage("");
-    setError("");
-
-    if (!selectedFile) {
-      setFile(null);
-      return;
-    }
-
-    const allowedTypes = [
-      "application/pdf",
-      "image/jpeg",
-      "image/png"
-    ];
-
-    if (!allowedTypes.includes(selectedFile.type)) {
-      setError(
-        "Only PDF, JPG, JPEG and PNG files are allowed."
+  const checkAgentStatus = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/agent/status`
       );
 
-      event.target.value = "";
-      setFile(null);
+      const data = await response.json();
+
+      setAgentOnline(data.online === true);
+    } catch (error) {
+      console.error(
+        "Agent status check error:",
+        error
+      );
+
+      setAgentOnline(false);
+    }
+  };
+
+  // ========================================
+  // MONITOR PRINT AGENT
+  // ========================================
+
+  useEffect(() => {
+    checkAgentStatus();
+
+    const interval = setInterval(() => {
+      checkAgentStatus();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // ========================================
+  // FILE SELECTION
+  // ========================================
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (!selectedFile) {
       return;
     }
 
+    // 20 MB file size limit
     if (selectedFile.size > 20 * 1024 * 1024) {
-      setError("File size must be less than 20 MB.");
+      setMessage(
+        "File size must be less than 20 MB."
+      );
 
-      event.target.value = "";
-      setFile(null);
+      e.target.value = "";
+
       return;
     }
 
     setFile(selectedFile);
+    setMessage("");
   };
 
-  const handlePrint = async () => {
+  // ========================================
+  // REMOVE FILE
+  // ========================================
+
+  const removeFile = () => {
+    setFile(null);
     setMessage("");
-    setError("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // ========================================
+  // FORMAT FILE SIZE
+  // ========================================
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) {
+      return `${bytes} B`;
+    }
+
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+
+    return `${(
+      bytes /
+      (1024 * 1024)
+    ).toFixed(1)} MB`;
+  };
+
+  // ========================================
+  // PRINT REQUEST
+  // ========================================
+
+  const handlePrint = async (e) => {
+    e.preventDefault();
+
+    // ----------------------------------------
+    // Check file
+    // ----------------------------------------
 
     if (!file) {
-      setError("Please select a file.");
+      setMessage(
+        "Please select a file first."
+      );
+
       return;
     }
+
+    // ----------------------------------------
+    // Check printer status
+    // ----------------------------------------
 
     if (!agentOnline) {
-      setError(
-        "Printer is offline. Please start the Print Agent first."
+      setMessage(
+        "Printer is offline. Please try again later."
       );
+
       return;
     }
 
-    try {
-      setLoading(true);
+    // ----------------------------------------
+    // Start loading
+    // ----------------------------------------
 
-      // Final printer status check before sending
+    setLoading(true);
+    setMessage("");
+
+    try {
+      // --------------------------------------
+      // Re-check printer status
+      // immediately before sending
+      // --------------------------------------
+
       const statusResponse = await fetch(
         `${API_URL}/api/agent/status`
       );
 
-      if (!statusResponse.ok) {
-        throw new Error("Unable to check printer status.");
-      }
+      const statusData =
+        await statusResponse.json();
 
-      const statusData = await statusResponse.json();
-
-      if (statusData.online !== true) {
+      if (!statusData.online) {
         setAgentOnline(false);
 
-        setError(
-          "Printer is offline. Please start the Print Agent first."
+        throw new Error(
+          "Printer is offline. Please try again later."
         );
-
-        return;
       }
+
+      setAgentOnline(true);
+
+      // --------------------------------------
+      // Create FormData
+      // --------------------------------------
 
       const formData = new FormData();
 
-      formData.append("file", file);
-      formData.append("printType", printType);
-      formData.append("copies", copies);
+      formData.append(
+        "file",
+        file
+      );
+
+      formData.append(
+        "printType",
+        printType
+      );
+
+      formData.append(
+        "copies",
+        copies
+      );
+
+      // --------------------------------------
+      // Send request to backend
+      // --------------------------------------
 
       const response = await fetch(
         `${API_URL}/api/print`,
@@ -148,122 +203,446 @@ function PrintForm() {
         }
       );
 
-      const data = await response.json();
+      // --------------------------------------
+      // Read response
+      // --------------------------------------
+
+      const data =
+        await response.json();
+
+      console.log(
+        "Print response:",
+        data
+      );
+
+      // --------------------------------------
+      // Check response
+      // --------------------------------------
 
       if (!response.ok) {
         throw new Error(
-          data.message || "Failed to send print request."
+          data.message ||
+          "Print request failed."
         );
       }
 
-      setMessage(
-        "🔒 Printed successfully. File securely deleted."
-      );
+      // --------------------------------------
+      // Success
+      // --------------------------------------
 
+      setMessage("success");
+
+      // Reset form state
       setFile(null);
       setCopies(1);
-      setPrintType("black-white");
 
+      // Safely clear file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
 
-      // Keep printer shown as online after successful print
-      setAgentOnline(true);
+      console.log(
+        "Print Job Created:",
+        data.jobId
+      );
 
     } catch (error) {
-      console.error("Print error:", error);
-
-      setError(
-        error.message ||
-        "Something went wrong while sending the print request."
+      console.error(
+        "Print request error:",
+        error
       );
+
+      setMessage(
+        error.message ||
+        "Unable to send print request."
+      );
+
     } finally {
       setLoading(false);
     }
   };
 
+  // ========================================
+  // RENDER
+  // ========================================
+
   return (
-    <div className="print-form">
+    <form
+      className="print-form"
+      onSubmit={handlePrint}
+    >
 
-      <div className="form-group">
-        <label>Select document</label>
+      {/* ==================================
+          UPLOAD DOCUMENT
+      =================================== */}
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          onChange={handleFileChange}
-          disabled={!agentOnline || loading}
-        />
+      <div className="form-section">
+
+        <div className="section-title">
+
+          <div>
+            <h2>
+              Upload your document
+            </h2>
+
+            <p>
+              Select a PDF or image to print
+            </p>
+          </div>
+
+        </div>
+
+        {!file ? (
+
+          <label
+            htmlFor="fileInput"
+            className="upload-area"
+          >
+
+            <div className="upload-icon">
+              ↑
+            </div>
+
+            <div className="upload-text">
+
+              <strong>
+                Choose a file
+              </strong>
+
+              <span>
+                or drag and drop here
+              </span>
+
+            </div>
+
+            <small>
+              PDF, JPG, JPEG, PNG • Max 20 MB
+            </small>
+
+            <input
+              ref={fileInputRef}
+              id="fileInput"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileChange}
+            />
+
+          </label>
+
+        ) : (
+
+          <div className="file-selected">
+
+            <div className="file-info">
+
+              <div className="file-icon">
+                📄
+              </div>
+
+              <div className="file-details">
+
+                <strong>
+                  {file.name}
+                </strong>
+
+                <span>
+                  {formatFileSize(file.size)}
+                </span>
+
+              </div>
+
+            </div>
+
+            <button
+              type="button"
+              className="remove-file"
+              onClick={removeFile}
+              aria-label="Remove file"
+            >
+              ×
+            </button>
+
+          </div>
+
+        )}
+
       </div>
 
-      {file && (
-        <div className="selected-file">
-          📄 {file.name}
+      {/* ==================================
+          PRINT TYPE
+      =================================== */}
+
+      <div className="form-section">
+
+        <div className="section-title">
+
+          <div>
+            <h2>
+              Print type
+            </h2>
+
+            <p>
+              Choose how you want your document printed
+            </p>
+          </div>
+
         </div>
-      )}
 
-      <div className="form-group">
-        <label>Print type</label>
+        <div className="print-options">
 
-        <select
-          value={printType}
-          onChange={(e) => setPrintType(e.target.value)}
-          disabled={!agentOnline || loading}
-        >
-          <option value="black-white">
-            Black & White
-          </option>
+          {/* BLACK & WHITE */}
 
-          <option value="color">
-            Color
-          </option>
-        </select>
+          <label
+            className={`print-option ${
+              printType === "black-white"
+                ? "selected"
+                : ""
+            }`}
+          >
+
+            <input
+              type="radio"
+              name="printType"
+              value="black-white"
+              checked={
+                printType === "black-white"
+              }
+              onChange={(e) =>
+                setPrintType(
+                  e.target.value
+                )
+              }
+              disabled={
+                !agentOnline ||
+                loading
+              }
+            />
+
+            <div className="option-content">
+
+              <div className="option-icon bw-icon">
+                ●
+              </div>
+
+              <div>
+
+                <strong>
+                  Black & White
+                </strong>
+
+                <span>
+                  Standard monochrome printing
+                </span>
+
+              </div>
+
+            </div>
+
+            <div className="radio-check">
+              ✓
+            </div>
+
+          </label>
+
+          {/* COLOR */}
+
+          <label
+            className={`print-option ${
+              printType === "color"
+                ? "selected"
+                : ""
+            }`}
+          >
+
+            <input
+              type="radio"
+              name="printType"
+              value="color"
+              checked={
+                printType === "color"
+              }
+              onChange={(e) =>
+                setPrintType(
+                  e.target.value
+                )
+              }
+              disabled={
+                !agentOnline ||
+                loading
+              }
+            />
+
+            <div className="option-content">
+
+              <div className="option-icon color-icon">
+                🌈
+              </div>
+
+              <div>
+
+                <strong>
+                  Color
+                </strong>
+
+                <span>
+                  Full color printing
+                </span>
+
+              </div>
+
+            </div>
+
+            <div className="radio-check">
+              ✓
+            </div>
+
+          </label>
+
+        </div>
+
       </div>
 
-      <div className="form-group">
-        <label>Copies</label>
+      {/* ==================================
+          NUMBER OF COPIES
+      =================================== */}
 
-        <input
-          type="number"
-          min="1"
-          max="100"
-          value={copies}
-          onChange={(e) => setCopies(e.target.value)}
-          disabled={!agentOnline || loading}
-        />
+      <div className="form-section">
+
+        <div className="section-title">
+
+          <div>
+            <h2>
+              Number of copies
+            </h2>
+
+            <p>
+              Select how many copies you need
+            </p>
+          </div>
+
+        </div>
+
+        <div className="copies-row">
+
+          <div className="copies-control">
+
+            <button
+              type="button"
+              onClick={() =>
+                setCopies((prev) =>
+                  Math.max(
+                    1,
+                    prev - 1
+                  )
+                )
+              }
+              aria-label="Decrease copies"
+              disabled={
+                !agentOnline ||
+                loading
+              }
+            >
+              −
+            </button>
+
+            <span>
+              {copies}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setCopies((prev) =>
+                  Math.min(
+                    100,
+                    prev + 1
+                  )
+                )
+              }
+              aria-label="Increase copies"
+              disabled={
+                !agentOnline ||
+                loading
+              }
+            >
+              +
+            </button>
+
+          </div>
+
+          <span className="copies-limit">
+            Maximum 100 copies
+          </span>
+
+        </div>
+
       </div>
 
-      {error && (
-        <div className="error-message">
-          ❌ {error}
-        </div>
-      )}
-
-      {message && (
-        <div className="success-message">
-          {message}
-        </div>
-      )}
+      {/* ==================================
+          PRINT BUTTON
+      =================================== */}
 
       <button
-        type="button"
-        onClick={handlePrint}
+        type="submit"
+        className="print-button"
         disabled={
           loading ||
           !file ||
           !agentOnline
         }
       >
-        {loading
-          ? "Sending request..."
-          : !agentOnline
-          ? "🔴 Printer Offline"
-          : "🖨️ Send to Printer"}
+
+        {loading ? (
+
+          <>
+            <span className="spinner"></span>
+            Sending request...
+          </>
+
+        ) : !agentOnline ? (
+
+          <>
+            🔴
+            Printer Offline
+          </>
+
+        ) : (
+
+          <>
+            🖨️
+            Send to Printer
+          </>
+
+        )}
+
       </button>
 
-    </div>
+      {/* ==================================
+          SUCCESS MESSAGE
+      =================================== */}
+
+      {message === "success" && (
+
+        <div className="success-message">
+          🔒 Printed successfully. File securely deleted.
+        </div>
+
+      )}
+
+      {/* ==================================
+          ERROR MESSAGE
+      =================================== */}
+
+      {message !== "success" &&
+        message !== "" && (
+
+          <div className="error-message">
+            ✕ {message}
+          </div>
+
+        )}
+
+    </form>
   );
 }
 
