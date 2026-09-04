@@ -19,22 +19,18 @@ function Home() {
 
       const data = await response.json();
 
-      if (data.online === true) {
-        // Printer is confirmed online
-        setAgentOnline(true);
-      }
+      // Backend is the source of truth
+      setAgentOnline(data.online === true);
 
-      // Do NOT immediately set offline here.
-      // This prevents temporary status flickering.
     } catch (error) {
       console.error(
         "Failed to check print agent status:",
         error
       );
 
-      // Do NOT immediately set offline here.
-      // A temporary network failure should not
-      // make the UI flicker to offline.
+      // IMPORTANT:
+      // Do not change the current status on a
+      // temporary network/request failure.
     }
   };
 

@@ -26,9 +26,8 @@ function PrintForm() {
 
       const data = await response.json();
 
-      if (data.online === true) {
-        setAgentOnline(true);
-      }
+      setAgentOnline(data.online === true);
+      
 
       // Do not immediately set offline.
       // Prevents temporary status flickering.
