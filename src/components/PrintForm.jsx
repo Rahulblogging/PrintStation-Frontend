@@ -26,14 +26,20 @@ function PrintForm() {
 
       const data = await response.json();
 
-      setAgentOnline(data.online === true);
+      if (data.online === true) {
+        setAgentOnline(true);
+      }
+
+      // Do not immediately set offline.
+      // Prevents temporary status flickering.
     } catch (error) {
       console.error(
         "Agent status check error:",
         error
       );
 
-      setAgentOnline(false);
+      // Do not immediately set offline.
+      // Temporary network errors are ignored.
     }
   };
 
@@ -161,8 +167,8 @@ function PrintForm() {
         await statusResponse.json();
 
       if (!statusData.online) {
-        setAgentOnline(false);
-
+        // Do not immediately change UI to offline.
+        // The backend will also verify agent status.
         throw new Error(
           "Printer is offline. Please try again later."
         );
@@ -231,6 +237,9 @@ function PrintForm() {
       // --------------------------------------
 
       setMessage("success");
+
+      // Keep status online after successful print
+      setAgentOnline(true);
 
       // Reset form state
       setFile(null);
@@ -368,6 +377,7 @@ function PrintForm() {
 
       </div>
 
+
       {/* ==================================
           PRINT TYPE
       =================================== */}
@@ -444,6 +454,7 @@ function PrintForm() {
 
           </label>
 
+
           {/* COLOR */}
 
           <label
@@ -501,6 +512,7 @@ function PrintForm() {
         </div>
 
       </div>
+
 
       {/* ==================================
           NUMBER OF COPIES
@@ -578,6 +590,7 @@ function PrintForm() {
 
       </div>
 
+
       {/* ==================================
           PRINT BUTTON
       =================================== */}
@@ -617,6 +630,7 @@ function PrintForm() {
 
       </button>
 
+
       {/* ==================================
           SUCCESS MESSAGE
       =================================== */}
@@ -628,6 +642,7 @@ function PrintForm() {
         </div>
 
       )}
+
 
       {/* ==================================
           ERROR MESSAGE
