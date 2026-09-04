@@ -614,7 +614,6 @@ function PrintForm() {
         ) : !agentOnline ? (
 
           <>
-            🔴
             Printer Offline
           </>
 
