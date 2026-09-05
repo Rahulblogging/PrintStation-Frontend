@@ -18,11 +18,11 @@ function Admin() {
   // FETCH JOBS
   // ========================================
 
-  const fetchJobs = async (isRefresh = false) => {
+  const fetchJobs = async (isRefresh = false, isSilent = false) => {
     try {
       if (isRefresh) {
         setRefreshing(true);
-      } else {
+      } else if (!isSilent) {
         setLoading(true);
       }
 
@@ -98,8 +98,15 @@ function Admin() {
       fetchAgentStatus();
     }, 5000);
 
+    // Refresh jobs every 5 seconds so cancellation/printing changes
+    // appear automatically on the Admin dashboard.
+    const jobsInterval = setInterval(() => {
+      fetchJobs(false, true);
+    }, 5000);
+
     return () => {
       clearInterval(statusInterval);
+      clearInterval(jobsInterval);
     };
   }, []);
 
@@ -178,6 +185,11 @@ function Admin() {
   const completedJobs = jobs.filter(
     (job) =>
       job.status === "Completed"
+  ).length;
+
+  const cancelledJobs = jobs.filter(
+    (job) =>
+      job.status === "Cancelled"
   ).length;
 
   // ========================================
@@ -651,6 +663,10 @@ function Admin() {
 
                           <option value="Failed">
                             Failed
+                          </option>
+
+                          <option value="Cancelled">
+                            Cancelled
                           </option>
 
                         </select>

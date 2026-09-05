@@ -1720,3 +1720,492 @@ tbody tr:hover {
   border-radius: 50%;
   background: #ef4444;
 }
+
+
+/* ========================================
+   PRINT FORM - MORE OPTIONS
+======================================== */
+
+.more-options-button {
+  width: 100%;
+  min-height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 10px 12px;
+
+  border: 1px solid #e1e5eb;
+  border-radius: 9px;
+
+  background: #fafbfc;
+  color: #374151;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.more-options-button:hover {
+  border-color: #93c5fd;
+  background: #f5f9ff;
+}
+
+.more-options-button strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.more-options-arrow {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   ADVANCED OPTIONS
+======================================== */
+
+.advanced-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  margin-top: 13px;
+  padding: 14px;
+
+  border: 1px solid #e7eaf0;
+  border-radius: 10px;
+
+  background: #fafbfc;
+}
+
+.advanced-option {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.advanced-option label {
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.advanced-option select,
+.advanced-option input {
+  width: 100%;
+  height: 38px;
+
+  padding: 0 11px;
+
+  border: 1px solid #d8dde5;
+  border-radius: 8px;
+
+  background: white;
+  color: #374151;
+
+  font-size: 12px;
+
+  outline: none;
+  transition: 0.2s;
+}
+
+.advanced-option select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.advanced-option select:hover,
+.advanced-option input:hover {
+  border-color: #93c5fd;
+}
+
+.advanced-option select:focus,
+.advanced-option input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.advanced-option input::placeholder {
+  color: #9ca3af;
+}
+
+.page-range-option {
+  grid-column: 1 / -1;
+}
+
+.page-range-help {
+  color: #9ca3af;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+
+/* ========================================
+   LIVE PRINT PREVIEW
+======================================== */
+
+.print-preview {
+  width: 100%;
+}
+
+/* Preview area */
+.preview-window {
+  width: 100%;
+  min-height: 420px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  overflow: auto;
+
+  border: 1px solid #e1e5eb;
+  border-radius: 10px;
+
+  background: #f3f4f6;
+
+  transition:
+    min-height 0.25s ease,
+    padding 0.25s ease;
+}
+
+/* ========================================
+   PAPER
+======================================== */
+
+.preview-page {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background: white;
+
+  border: 1px solid #cfd5dd;
+
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, 0.12);
+
+  transition:
+    width 0.25s ease,
+    height 0.25s ease,
+    padding 0.25s ease,
+    transform 0.25s ease;
+}
+
+/* ========================================
+   PAPER SIZES
+======================================== */
+
+/* A4 = 210 / 297 */
+.preview-a4 .preview-page {
+  width: min(100%, 300px);
+  aspect-ratio: 210 / 297;
+}
+
+/* Letter = 8.5 / 11 */
+.preview-letter .preview-page {
+  width: min(100%, 300px);
+  aspect-ratio: 8.5 / 11;
+}
+
+/* Legal = 8.5 / 14 */
+.preview-legal .preview-page {
+  width: min(100%, 270px);
+  aspect-ratio: 8.5 / 14;
+}
+
+
+/* ========================================
+   LANDSCAPE
+======================================== */
+
+.preview-landscape .preview-page {
+  width: min(100%, 420px);
+
+  aspect-ratio: 297 / 210;
+}
+
+.preview-landscape.preview-letter .preview-page {
+  aspect-ratio: 11 / 8.5;
+}
+
+.preview-landscape.preview-legal .preview-page {
+  aspect-ratio: 14 / 8.5;
+}
+
+
+/* ========================================
+   PREVIEW IMAGE
+======================================== */
+
+.preview-page .preview-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-position: center;
+
+  transition:
+    width 0.25s ease,
+    height 0.25s ease,
+    object-fit 0.25s ease,
+    transform 0.25s ease;
+}
+
+
+/* ========================================
+   SHRINK TO FIT
+======================================== */
+
+.preview-fit-shrink-to-fit .preview-image {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+}
+
+
+/* ========================================
+   FIT TO PAGE
+======================================== */
+
+.preview-fit-fit-to-page .preview-image {
+  width: 100%;
+  height: 100%;
+
+  object-fit: fill;
+}
+
+
+/* ========================================
+   ACTUAL SIZE
+======================================== */
+
+.preview-fit-actual-size {
+  overflow: auto;
+}
+
+.preview-fit-actual-size .preview-image {
+  width: auto;
+  height: auto;
+
+  max-width: none;
+  max-height: none;
+
+  object-fit: initial;
+}
+
+
+/* ========================================
+   MARGINS
+======================================== */
+
+/* Uniform */
+.preview-margin-uniform {
+  padding: 20px;
+}
+
+/* None */
+.preview-margin-none {
+  padding: 0;
+}
+
+/* Minimum */
+.preview-margin-minimum {
+  padding: 6px;
+}
+
+
+/* ========================================
+   PREVIEW PLACEHOLDER
+======================================== */
+
+.preview-placeholder {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  color: #9ca3af;
+
+  font-size: 12px;
+}
+
+
+/* ========================================
+   PREVIEW CONTROLS
+======================================== */
+
+.preview-controls {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+.preview-controls button {
+  min-width: 70px;
+  height: 30px;
+
+  padding: 0 10px;
+
+  border: 1px solid #d8dde5;
+  border-radius: 6px;
+
+  background: white;
+  color: #4b5563;
+
+  font-size: 10px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.preview-controls button:hover:not(:disabled) {
+  background: #f5f7fa;
+  border-color: #93c5fd;
+}
+
+.preview-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 700px) {
+  .preview-window {
+    min-height: 350px;
+
+    padding: 12px;
+  }
+
+  .preview-portrait .preview-page {
+    width: min(100%, 260px);
+  }
+
+  .preview-landscape .preview-page {
+    width: min(100%, 100%);
+  }
+
+  .preview-page {
+    max-width: 100%;
+  }
+
+  .preview-page .preview-image {
+    max-width: 100%;
+  }
+}
+
+/* ========================================
+   CANCEL BUTTON
+======================================== */
+
+.cancel-button {
+  width: 100%;
+  height: 38px;
+
+  margin-top: 8px;
+
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+
+  background: white;
+  color: #dc2626;
+
+  font-size: 12px;
+  font-weight: 650;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* ========================================
+   PRINT REQUEST STATE
+======================================== */
+
+.print-request-status {
+  margin-top: 8px;
+
+  text-align: center;
+
+  color: #8992a3;
+  font-size: 10px;
+}
+
+
+/* ========================================
+   MORE OPTIONS - MOBILE
+======================================== */
+
+@media (max-width: 700px) {
+
+  .advanced-options {
+    grid-template-columns: 1fr;
+    gap: 10px;
+
+    padding: 12px;
+  }
+
+  .page-range-option {
+    grid-column: auto;
+  }
+
+  .preview-window {
+    min-height: 150px;
+  }
+
+  .preview-window img,
+  .preview-window canvas {
+    max-height: 300px;
+  }
+
+  .more-options-button {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 380px) {
+
+  .advanced-options {
+    padding: 10px;
+  }
+
+  .advanced-option select,
+  .advanced-option input {
+    height: 36px;
+    font-size: 11px;
+  }
+}
